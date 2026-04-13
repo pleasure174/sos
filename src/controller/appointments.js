@@ -1,6 +1,7 @@
 import Appointment from "../database/models/appointment.js";
 import User from "../database/models/user.js";
 import Notification from "../database/models/notification.js";
+import DoctorAvailability from "../database/models/doctoravailability.js";
 
 export const requestAppointment = async (req, res) => {
   try {
@@ -18,6 +19,27 @@ export const requestAppointment = async (req, res) => {
       return res.status(404).json({ message: "Doctor not found" });
     }
 
+    // Check availability
+    const appointmentDateObj = new Date(appointmentDate);
+    const dateStr = appointmentDateObj.toISOString().split("T")[0]; // YYYY-MM-DD
+    const timeStr = appointmentDateObj.toTimeString().split(" ")[0]; // HH:MM:SS
+
+    const availability = await DoctorAvailability.findOne({
+      where: {
+        doctorId,
+        availableDate: dateStr,
+        startTime: { [require("sequelize").Op.lte]: timeStr },
+        endTime: { [require("sequelize").Op.gte]: timeStr },
+        isBooked: false,
+      },
+    });
+
+    if (!availability) {
+      return res
+        .status(400)
+        .json({ message: "Doctor is not available at this time" });
+    }
+
     const appointment = await Appointment.create({
       patientId,
       doctorId,
@@ -26,6 +48,9 @@ export const requestAppointment = async (req, res) => {
       notes,
       status: "scheduled",
     });
+
+    // Optionally mark availability as booked
+    // await availability.update({ isBooked: true });
 
     await Notification.create({
       userId: patientId,

@@ -5,6 +5,7 @@ import userRoutes from "./src/routes/index.js";
 import authRoutes from "./src/routes/auth.js";
 import appointmentRoutes from "./src/routes/appointments.js";
 import notificationRoutes from "./src/routes/notifications.js";
+import doctorAvailabilityRoutes from "./src/routes/doctoravailability.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,6 +16,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api", userRoutes);
 app.use("/api", appointmentRoutes);
 app.use("/api", notificationRoutes);
+app.use("/api", doctorAvailabilityRoutes);
 
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
